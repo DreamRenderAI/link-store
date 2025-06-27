@@ -1,0 +1,27 @@
+name: Append Link
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Link to add'
+        required: true
+        type: string
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add URL to data.json
+        run: |
+          echo "Adding: ${{ github.event.inputs.url }}"
+          jq -s '.[0] | [$ARGS.named.url] + .' data/data.json --arg url "${{ github.event.inputs.url }}" > tmp.json
+          mv tmp.json data/data.json
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/data.json
+          git commit -m "Add link: ${{ github.event.inputs.url }}"
+          git push
