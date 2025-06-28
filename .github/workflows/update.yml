@@ -13,15 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Show current data.json
+        run: cat data/data.json
+
       - name: Add URL to data.json
         run: |
           echo "Adding: ${{ github.event.inputs.url }}"
-          jq -s '.[0] | [$ARGS.named.url] + .' data/data.json --arg url "${{ github.event.inputs.url }}" > tmp.json
+          jq --arg url "${{ github.event.inputs.url }}" '. |= [$url] + .' data/data.json > tmp.json
+          cat tmp.json
           mv tmp.json data/data.json
+
       - name: Commit and push
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add data/data.json
-          git commit -m "Add link: ${{ github.event.inputs.url }}"
+          git diff --staged
+          git commit -m "Add link: ${{ github.event.inputs.url }}" || echo "No changes to commit"
           git push
